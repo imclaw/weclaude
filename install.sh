@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-REPO="imclaw/wechat-claude-go"
+REPO="imclaw/weclaude"
 BIN="weclaude"
 INSTALL_DIR="/usr/local/bin"
 
@@ -26,7 +26,7 @@ case "$OS" in
     ;;
   *)
     echo "Unsupported OS: $OS"
-    echo "Windows users: download manually from https://github.com/$REPO/releases/latest"
+    echo "Windows users: download manually from https://github.com/imclaw/weclaude/releases/latest"
     exit 1
     ;;
 esac

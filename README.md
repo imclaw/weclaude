@@ -1,13 +1,13 @@
 # weclaude
 
-通过微信 iLink Bot 与本地 Claude Code 对话的中间层服务。
+通过微信 ClawBot 与本地 Claude Code 对话的中间层服务。
 
-发送消息给微信 Bot → weclaude 转发给本地 `claude` CLI → 将回复发回微信。
+发送消息给微信 ClawBot → weclaude 转发给本地 `claude` CLI → 将回复发回微信。
 
 ## 前置条件
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 已安装并完成登录（`claude` 命令可用）
-- 微信账号（用于扫码登录 iLink Bot）
+- 微信账号（用于扫码登录 ClawBot）
 - 从源码编译时需要 Go 1.22+
 
 ## 安装
@@ -15,14 +15,14 @@
 ### 方式一：一键安装脚本（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/imclaw/wechat-claude-go/main/install.sh | sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/imclaw/weclaude/main/install.sh)"
 ```
 
 自动检测系统和架构，下载最新版本并安装到 `/usr/local/bin/weclaude`。
 
 ### 方式二：手动下载二进制
 
-前往 [Releases](https://github.com/imclaw/wechat-claude-go/releases/latest) 页面，下载对应平台的文件：
+前往 [Releases](https://github.com/imclaw/weclaude/releases/latest) 页面，下载对应平台的文件：
 
 | 平台 | 文件名 |
 |------|--------|
@@ -44,8 +44,8 @@ sudo mv weclaude-darwin-arm64 /usr/local/bin/weclaude
 需要 Go 1.22+。
 
 ```bash
-git clone https://github.com/imclaw/wechat-claude-go
-cd wechat-claude-go
+git clone https://github.com/imclaw/weclaude
+cd weclaude
 go install .
 ```
 
