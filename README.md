@@ -12,9 +12,17 @@
 
 ## 安装
 
-### 方式一：直接下载二进制（推荐）
+### 方式一：一键安装脚本（推荐）
 
-前往 [Releases](https://github.com/yourname/wechat-claude-go/releases/latest) 页面，下载对应平台的文件：
+```bash
+curl -fsSL https://raw.githubusercontent.com/imclaw/wechat-claude-go/main/install.sh | sh
+```
+
+自动检测系统和架构，下载最新版本并安装到 `/usr/local/bin/weclaude`。
+
+### 方式二：手动下载二进制
+
+前往 [Releases](https://github.com/imclaw/wechat-claude-go/releases/latest) 页面，下载对应平台的文件：
 
 | 平台 | 文件名 |
 |------|--------|
@@ -36,7 +44,7 @@ sudo mv weclaude-darwin-arm64 /usr/local/bin/weclaude
 需要 Go 1.22+。
 
 ```bash
-git clone https://github.com/yourname/wechat-claude-go
+git clone https://github.com/imclaw/wechat-claude-go
 cd wechat-claude-go
 go install .
 ```
