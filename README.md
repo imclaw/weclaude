@@ -4,6 +4,8 @@
 
 发送消息给微信 ClawBot → weclaude 转发给本地 `claude` CLI → 将回复发回微信。
 
+<img src="asset/image.png" width="400" />
+
 ## 前置条件
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) 已安装并完成登录（`claude` 命令可用）
