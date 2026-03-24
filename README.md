@@ -4,7 +4,7 @@
 
 发送消息给微信 ClawBot → weclaude 转发给本地 `claude` CLI → 将回复发回微信。
 
-<img src="asset/image.png" width="400" />
+<img src="asset/image.jpg" width="400" />
 
 ## 前置条件
 
