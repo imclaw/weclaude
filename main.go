@@ -6,7 +6,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
+	"strconv"
 	"syscall"
+	"time"
+
+	"github.com/sevlyar/go-daemon"
 )
 
 func main() {
@@ -27,6 +32,22 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("已登录\n登录时间: %s\n", auth.LoggedAt)
+
+		// 检查守护进程状态
+		pidData, err := os.ReadFile(pidFilePath())
+		if err == nil {
+			if pid, err := strconv.Atoi(string(pidData)); err == nil {
+				if proc, err := os.FindProcess(pid); err == nil {
+					if err := proc.Signal(syscall.Signal(0)); err == nil {
+						fmt.Printf("守护进程: 运行中 (PID: %d)\n", pid)
+					} else {
+						fmt.Println("守护进程: 未运行 (PID 文件过期)")
+					}
+				}
+			}
+		} else {
+			fmt.Println("守护进程: 未启动")
+		}
 	case "logout":
 		if err := os.Remove(authFilePath()); err != nil && !os.IsNotExist(err) {
 			log.Fatalf("退出登录失败: %v", err)
@@ -39,6 +60,10 @@ func main() {
 		fmt.Println("所有会话已重置")
 	case "--help", "-h", "help":
 		printHelp()
+	case "daemon":
+		runServerDaemon()
+	case "stop":
+		stopDaemon()
 	default:
 		runServer()
 	}
@@ -48,12 +73,76 @@ func printHelp() {
 	fmt.Print(`weclaude - 微信 iLink Bot → Claude Code 中间层
 
 用法:
-  weclaude            启动服务
-  weclaude login      扫码登录
-  weclaude status     查看登录状态
-  weclaude reset      清除所有会话
-  weclaude logout     退出登录
+  weclaude         启动服务（前台）
+  weclaude daemon  启动守护进程（后台）
+  weclaude stop    停止守护进程
+  weclaude login   扫码登录
+  weclaude status  查看登录状态和守护进程信息
+  weclaude reset   清除所有会话
+  weclaude logout  退出登录
 `)
+}
+
+func pidFilePath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".weclaude", "daemon.pid")
+}
+
+func runServerDaemon() {
+	auth, err := loadAuth()
+	if err != nil || auth == nil {
+		log.Fatal("未登录，请先运行: weclaude login")
+	}
+
+	// 生成日期日志文件名
+	today := time.Now().Format("2006-01-02")
+	logFile := filepath.Join(getDataDir(), "daemon-"+today+".log")
+
+	cntxt := &daemon.Context{
+		PidFileName: pidFilePath(),
+		PidFilePerm: 0644,
+		LogFileName: logFile,
+		LogFilePerm: 0640,
+		WorkDir:     "./",
+		Chroot:      "",
+		Umask:       027,
+	}
+
+	if child, _ := cntxt.Reborn(); child != nil {
+		fmt.Printf("守护进程已启动，PID: %d\n", child.Pid)
+		return
+	}
+	defer cntxt.Release()
+
+	runServer()
+}
+
+func stopDaemon() {
+	pidData, err := os.ReadFile(pidFilePath())
+	if err != nil {
+		fmt.Println("守护进程未运行")
+		os.Exit(1)
+	}
+
+	pid, err := strconv.Atoi(string(pidData))
+	if err != nil {
+		fmt.Println("无效的 PID 文件")
+		os.Exit(1)
+	}
+
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		fmt.Println("无法找到进程:", err)
+		os.Exit(1)
+	}
+
+	if err := proc.Kill(); err != nil {
+		fmt.Println("停止守护进程失败:", err)
+		os.Exit(1)
+	}
+
+	os.Remove(pidFilePath())
+	fmt.Println("守护进程已停止")
 }
 
 func runServer() {
