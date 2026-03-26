@@ -13,6 +13,7 @@ import (
 	"time"
 
 	qrcode "github.com/skip2/go-qrcode"
+	"github.com/mdp/qrterminal/v3"
 )
 
 const ilinkBaseURL = "https://ilinkai.weixin.qq.com"
@@ -97,24 +98,36 @@ func login() (*Auth, error) {
 
 	// 生成 PNG 并保存到临时目录
 	imgPath := filepath.Join(os.TempDir(), "wechat-qrcode.png")
-	if err := qrcode.WriteFile(qrContent, qrcode.Medium, 400, imgPath); err != nil {
+	if err := qrcode.WriteFile(qrContent, qrcode.Medium, 256, imgPath); err != nil {
 		return nil, fmt.Errorf("生成二维码图片失败: %w", err)
 	}
 
-	// 跨平台打开图片：Windows 用 start，macOS 用 open，Linux 用 xdg-open
-	var openCmd *exec.Cmd
-	switch runtime.GOOS {
-	case "windows":
-		openCmd = exec.Command("cmd", "/c", "start", "", imgPath)
-	case "darwin":
-		openCmd = exec.Command("open", imgPath)
-	default:
-		openCmd = exec.Command("xdg-open", imgPath)
-	}
-	openCmd.Start() //nolint:errcheck
+	// Windows 直接打开图片；其他平台在终端显示 ASCII 二维码
+	if runtime.GOOS == "windows" {
+		go func() {
+			exec.Command("cmd", "/c", "start", "", imgPath).Start()
+		}()
+		fmt.Printf("\n二维码已保存至：%s\n", imgPath)
+		fmt.Print("请用微信扫描弹出的二维码图片...\n\n")
+	} else {
+		// 在终端直接显示 ASCII 二维码
+		fmt.Print("\n")
+		qrterminal.GenerateHalfBlock(qrContent, qrterminal.M, os.Stdout)
+		fmt.Print("\n")
 
-	fmt.Printf("\n二维码已保存至：%s\n", imgPath)
-	fmt.Print("请用微信扫描弹出的二维码图片...\n\n")
+		// 尝试打开图片（如果有图形界面）
+		go func() {
+			var openCmd *exec.Cmd
+			if runtime.GOOS == "darwin" {
+				openCmd = exec.Command("open", imgPath)
+			} else {
+				openCmd = exec.Command("xdg-open", imgPath)
+			}
+			openCmd.Start()
+		}()
+		fmt.Printf("二维码已保存至：%s\n", imgPath)
+		fmt.Print("请用微信扫描上方二维码...\n\n")
+	}
 
 	// 轮询扫码状态，最多等 3 分钟
 	deadline := time.Now().Add(3 * time.Minute)
