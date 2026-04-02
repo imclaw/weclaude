@@ -62,28 +62,31 @@ go build -o weclaude .
 
 ## 使用
 
-### 第一步：登录
-
-```bash
-weclaude login
-```
-
-会自动弹出二维码图片，用微信扫码授权。登录凭证保存在本地，无需重复登录。
-
-### 第二步：启动服务
+### 启动服务
 
 ```bash
 weclaude
 ```
 
-服务启动后会持续监听微信消息，并将消息转发给本地 `claude` CLI，再把回复发回微信。
+直接运行即可。若尚未登录，会自动弹出二维码，扫码授权后立即开始监听微信消息。登录凭证保存在本地，下次启动无需重复登录。
+
+### 后台运行（守护进程）
+
+```bash
+weclaude daemon   # 在后台启动服务
+weclaude stop     # 停止后台服务
+weclaude status   # 查看登录状态和守护进程信息
+```
 
 ### 其他命令
 
 ```bash
-weclaude status   # 查看登录状态
-weclaude reset    # 清除所有会话（开始全新对话）
-weclaude logout   # 退出登录
+weclaude login                  # 手动扫码登录
+weclaude contacts               # 列出所有已知联系人 ID
+weclaude send <text>            # 主动发送消息给默认用户（登录用户）
+weclaude send <userID> <text>   # 主动发送消息给指定联系人
+weclaude reset                  # 清除所有会话（开始全新对话）
+weclaude logout                 # 退出登录
 ```
 
 ## 会话管理
