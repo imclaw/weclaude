@@ -62,6 +62,10 @@ func main() {
 		cmdSend(os.Args[2:])
 	case "contacts":
 		cmdContacts()
+	case "upgrade":
+		cmdUpgrade()
+	case "--version", "-v", "version":
+		fmt.Println(version)
 	case "--help", "-h", "help":
 		printHelp()
 	case "daemon":
@@ -87,6 +91,8 @@ func printHelp() {
   weclaude send <userID> <text>   主动发送消息给指定联系人
   weclaude reset                  清除所有会话
   weclaude logout                 退出登录
+  weclaude upgrade                升级到最新版本
+  weclaude version                显示当前版本
 `)
 }
 
