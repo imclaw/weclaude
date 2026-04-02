@@ -205,7 +205,11 @@ func runServer() {
 		log.Fatalf("读取登录信息失败: %v", err)
 	}
 	if auth == nil {
-		log.Fatal("未登录，请先运行: weclaude login")
+		fmt.Println("尚未登录，开始扫码登录...")
+		auth, err = login()
+		if err != nil {
+			log.Fatalf("登录失败: %v", err)
+		}
 	}
 
 	fmt.Printf("已登录（%s），正在启动...\n", auth.LoggedAt)
