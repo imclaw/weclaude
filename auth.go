@@ -22,6 +22,8 @@ const ilinkBaseURL = "https://ilinkai.weixin.qq.com"
 type Auth struct {
 	BotToken string `json:"bot_token"`
 	BaseURL  string `json:"base_url"`
+	BotID    string `json:"bot_id"`
+	UserID   string `json:"user_id"`
 	LoggedAt string `json:"logged_at"`
 }
 
@@ -143,6 +145,7 @@ func login() (*Auth, error) {
 		case "scanned":
 			fmt.Print("已扫码，请在手机上确认...\r")
 		case "confirmed":
+			fmt.Printf("[debug] confirmed response: %v\n", status)
 			botToken, _ := status["bot_token"].(string)
 			auth := &Auth{
 				BotToken: botToken,
@@ -152,6 +155,16 @@ func login() (*Auth, error) {
 				auth.BaseURL = u
 			} else {
 				auth.BaseURL = ilinkBaseURL
+			}
+			// 尝试常见字段名获取 bot 自身 ID
+			for _, key := range []string{"ilink_bot_id", "openid", "bot_openid", "bot_user_id", "bot_id", "to_user_name"} {
+				if v, ok := status[key].(string); ok && v != "" {
+					auth.BotID = v
+					break
+				}
+			}
+			if v, ok := status["ilink_user_id"].(string); ok && v != "" {
+				auth.UserID = v
 			}
 			if err := saveAuth(auth); err != nil {
 				return nil, err

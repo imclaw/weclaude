@@ -31,6 +31,16 @@ func (s *sessionStore) set(userID, sessionID string) {
 	s.save()
 }
 
+func (s *sessionStore) list() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	ids := make([]string, 0, len(s.data))
+	for id := range s.data {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 func (s *sessionStore) delete(userID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

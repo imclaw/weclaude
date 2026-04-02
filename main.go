@@ -58,6 +58,10 @@ func main() {
 			log.Fatalf("重置会话失败: %v", err)
 		}
 		fmt.Println("所有会话已重置")
+	case "send":
+		cmdSend(os.Args[2:])
+	case "contacts":
+		cmdContacts()
 	case "--help", "-h", "help":
 		printHelp()
 	case "daemon":
@@ -73,19 +77,69 @@ func printHelp() {
 	fmt.Print(`weclaude - 微信 iLink Bot → Claude Code 中间层
 
 用法:
-  weclaude         启动服务（前台）
-  weclaude daemon  启动守护进程（后台）
-  weclaude stop    停止守护进程
-  weclaude login   扫码登录
-  weclaude status  查看登录状态和守护进程信息
-  weclaude reset   清除所有会话
-  weclaude logout  退出登录
+  weclaude                        启动服务（前台）
+  weclaude daemon                 启动守护进程（后台）
+  weclaude stop                   停止守护进程
+  weclaude login                  扫码登录
+  weclaude status                 查看登录状态和守护进程信息
+  weclaude contacts               列出所有已知联系人 ID
+  weclaude send <text>            主动发送消息给默认用户（登录用户）
+  weclaude send <userID> <text>   主动发送消息给指定联系人
+  weclaude reset                  清除所有会话
+  weclaude logout                 退出登录
 `)
 }
 
 func pidFilePath() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".weclaude", "daemon.pid")
+}
+
+func cmdContacts() {
+	sessions := newSessionStore()
+	ids := sessions.list()
+	if len(ids) == 0 {
+		fmt.Println("暂无联系人（尚未收到任何微信消息）")
+		return
+	}
+	fmt.Printf("已知联系人（共 %d 个）:\n", len(ids))
+	for _, id := range ids {
+		fmt.Println(" ", id)
+	}
+}
+
+func cmdSend(args []string) {
+	auth, err := loadAuth()
+	if err != nil || auth == nil {
+		log.Fatal("未登录，请先运行: weclaude login")
+	}
+	if auth.BotID == "" {
+		log.Fatal("未存储 Bot ID，请重新运行 weclaude login 后再试")
+	}
+
+	var toUserID, text string
+	switch len(args) {
+	case 1:
+		if auth.UserID == "" {
+			log.Fatal("未存储默认用户 ID，请重新运行 weclaude login 或指定用户: weclaude send <userID> <text>")
+		}
+		toUserID = auth.UserID
+		text = args[0]
+	case 2:
+		toUserID = args[0]
+		text = args[1]
+	default:
+		fmt.Fprintln(os.Stderr, "用法: weclaude send <text>             # 发送给默认用户")
+		fmt.Fprintln(os.Stderr, "      weclaude send <userID> <text>   # 发送给指定用户")
+		os.Exit(1)
+	}
+
+	client := newClient(auth)
+	s := newSender(client)
+	if err := s.sendText(toUserID, text, "", auth.BotID); err != nil {
+		log.Fatalf("发送失败: %v", err)
+	}
+	fmt.Printf("已发送给 %s\n", toUserID)
 }
 
 func runServerDaemon() {
